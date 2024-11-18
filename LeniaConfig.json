@@ -1,0 +1,18 @@
+{
+    "frameWidth": 1024,
+    "frameHeight": 1024,
+    "frameAmount": 1000,
+    "iteration_per_frame": 20,
+    "deltaTime": 0.0001,
+    "kernel_radius": 18,
+    "kernel_alpha": 4,
+    "kernel_peak_heights": [
+        1.0
+    ],
+    "growth_mhu": 0.14,
+    "growth_sigma": 0.015,
+    "blocks_x": 32,
+    "blocks_y": 32,
+    "threads_x": 32,
+    "threads_y": 32
+}
