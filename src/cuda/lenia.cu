@@ -21,6 +21,10 @@ __device__ float convolution(int centerx, int centery, float* frame, int frame_w
             // if (imagex >= frame_width) imagex -= frame_width;
             // if (imagey < 0) imagey += frame_height;
             // if (imagey >= frame_width) imagey -= frame_height;
+            
+            if (imagex < 0 || imagex >= frame_width || imagey < 0 || imagey >= frame_height) {
+                continue;
+            }
 
             value += frame[imagex + imagey * frame_width] * kernel[conv_x + conv_y * kernel_size];
         }
