@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=lp_h_pds_iiw
 #SBATCH --cluster=wice
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu_h100
 #SBATCH --gpus-per-node=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
@@ -10,7 +10,7 @@
 #SBATCH --output="%x.o%A"
 
 module purge
-module load cluster/wice/gpu
+module load cluster/wice/gpu_h100
 module load CUDA/11.7.0
 module load GCC/10.3.0
 
@@ -22,7 +22,7 @@ gcc --version 2>&1
 
 nvcc -ccbin=g++ ./cuda/main.cpp ./cuda/lenia.cpp ./cuda/lenia.cu -o ./lenia --std=c++17
 
-output_file="lenia_results.csv"
+output_file="lenia_results_h100.csv"
 > $output_file # Clear the file if it exists
 
 # Write the CSV header
