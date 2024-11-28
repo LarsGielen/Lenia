@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Input file containing the CSV data
-input_file = "results/h100/lenia_results_h100_10k.csv"
+input_file = "results/p100/lenia_results_p100.csv"
 
 # Read the CSV file into a pandas DataFrame
 data = pd.read_csv(input_file)
@@ -52,5 +52,4 @@ axes[1, 1].legend()
 
 # Adjust layout
 plt.tight_layout()
-plt.savefig("results_h100_10k.png")
-print("Combined plots saved")
+plt.savefig("results_p100.png")
