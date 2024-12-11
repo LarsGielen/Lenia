@@ -12,11 +12,13 @@ LeniaResult leniaRunCuda(LeniaData data, std::vector<float> input, KernelData ke
 
 void leniaRun(LeniaData data, std::string output_name, bool verbose) {
 	std::vector<float> input(data.FrameWidth * data.FrameHeight);
-    KernelData kernel = createKernel(data.KernelRadius, data.KernelPeakHeights, data.KernelAlpha);
+    KernelData kernel = createKernel(data.KernelRadius, data.KernelPeakHeights, data.KernelAlpha, data.KernelType);
 
+    srand(static_cast<unsigned int>(data.Seed));
     for (size_t i = 0; i < input.size(); ++i) {
-        input[i] = (float)rand() / RAND_MAX;
-        // if ((float)rand() / RAND_MAX < 0.1) input[i] = 1.0;
+        // input[i] = (float)rand() / RAND_MAX;
+        // if ((float)rand() / RAND_MAX < data.Rand_threshold) input[i] = (float)rand() / RAND_MAX;
+        if ((float)rand() / RAND_MAX < data.Rand_threshold) input[i] = 1;
     }
 
     if (verbose)
@@ -24,10 +26,12 @@ void leniaRun(LeniaData data, std::string output_name, bool verbose) {
             << " -" << "Frame Width: " << data.FrameWidth << " Height: " << data.FrameHeight << std::endl
             << " -" << "Frame Amount: " << data.FrameAmount << " Iterations per Frame: " << data.IterationPerFrame << std::endl
             << " -" << "Delta Time: " << data.DeltaTime << std::endl
-            << " -" << "Kernel Radius: " << data.KernelRadius << " Kernel Alpha: " << data.KernelAlpha << std::endl
-            << " -" << "Growth Center: " << data.GrowthCenter << " Growth Width: " << data.GrowthWidth << std::endl
+            << " -" << "Kernel Type: " << data.KernelType << " Kernel Radius: " << data.KernelRadius << " Kernel Alpha: " << data.KernelAlpha << std::endl
+            << " -" << "Growth Type: " << data.GrowthType << " Growth Center: " << data.GrowthCenter << " Growth Width: " << data.GrowthWidth << std::endl
             << " -" << "Blocks X: " << data.Blocks_x << " Y: " << data.Blocks_y << std::endl
-            << " -" << "Threads X: " << data.Threads_x << " Y: " << data.Threads_y << std::endl;
+            << " -" << "Threads X: " << data.Threads_x << " Y: " << data.Threads_y << std::endl
+            << " -" << "Threads X: " << data.Threads_x << " Y: " << data.Threads_y << std::endl
+            << " -" << "Seed: " << data.Seed << " Rand Threshold: " << data.Rand_threshold << std::endl;
 
     LeniaResult result = leniaRunCuda(data, input, kernel);
 
@@ -40,18 +44,24 @@ void leniaRun(LeniaData data, std::string output_name, bool verbose) {
     }
 }
 
-float kernelFunction(float value, const std::vector<float>& peak_heights, float alpha) {
+float clamp(float value, float min_value, float max_value) {
+    return (value < min_value) ? min_value : (value > max_value ? max_value : value);
+}
+
+float kernelFunction(float value, const std::vector<float>& peak_heights, float alpha, int kernel_type) {
     float sum = 0.0;
     int peak_amount = peak_heights.size();
 
+
     for (int i = 0; i < peak_amount; ++i) {
         if ((i / (float)peak_amount <= value) && (value <= (i + 1) / (float)peak_amount)) 
-            sum += peak_heights[i] * std::abs(gaussian_bump(peak_amount * value - i, alpha));
+            if (kernel_type == 0) sum += peak_heights[i] * std::abs(gaussian_bump(peak_amount * value - i, alpha));
+            if (kernel_type == 1) sum =  peak_heights[i] * clamp(step(peak_amount * value - i, 0.5, 1.0/4.0), 0.0, 1.0);
     }
     return sum;
 }
 
-KernelData createKernel(int radius, std::vector<float> peaks, float alpha) {
+KernelData createKernel(int radius, std::vector<float> peaks, float alpha, int kernel_type) {
     int size = radius * 2 + 1;
     float total_sum = 0.0f;
     std::vector<float> kernel(size * size);
@@ -63,7 +73,7 @@ KernelData createKernel(int radius, std::vector<float> peaks, float alpha) {
             float radial_distance = std::sqrt(kernel_x * kernel_x + kernel_y * kernel_y);
             float radial_distance_percentage = radial_distance / radius;
 
-            float value = kernelFunction(radial_distance_percentage, peaks, alpha);
+            float value = kernelFunction(radial_distance_percentage, peaks, alpha, kernel_type);
 
             kernel[x + y * size] = value;
             total_sum += value;

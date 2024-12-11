@@ -6,3 +6,7 @@ float gaussian_bump(double value, double alpha) {
     
     return 2 * std::exp(alpha * (1 - (1 / (4 * value * (1 - value)))));
 }
+
+float step(double value, double mhu, double sigma) {
+    return (std::abs(value - mhu) <= sigma) ? 1 : -1;
+}

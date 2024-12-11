@@ -3,8 +3,9 @@
 #include <iostream>
 #include "lenia.h"
 
-__device__ float growth_function(float input, float growth_center, float growth_width) {
-    return 2 * exp(-pow(input - growth_center, 2) / (2 * pow(growth_width, 2))) - 1; // Gaussian function [0, 1] -> [-1, 1]
+__device__ float growth_function(float input, float growth_center, float growth_width, int type) {
+    if (type == 0) return 2 * exp(-pow(input - growth_center, 2) / (2 * pow(growth_width, 2))) - 1; // Gaussian function [0, 1] -> [-1, 1]
+    else return (std::abs(input - growth_center) <= growth_width) ? 1 : -1; // Step function [0, 1] -> [-1, 1]
 }
 
 __device__ float convolution(int centerx, int centery, float* frame, int frame_width, int frame_height, float* kernel, int kernel_radius) {
@@ -16,11 +17,10 @@ __device__ float convolution(int centerx, int centery, float* frame, int frame_w
             int imagex = (centerx + (conv_x - kernel_radius));
             int imagey = (centery + (conv_y - kernel_radius));
 
-            // % (modulo) does not work -_- (figured it out after 5 hours...)
-            // if (imagex < 0) imagex += frame_width;
-            // if (imagex >= frame_width) imagex -= frame_width;
-            // if (imagey < 0) imagey += frame_height;
-            // if (imagey >= frame_width) imagey -= frame_height;
+            if (imagex < 0) imagex += frame_width;
+            if (imagex >= frame_width) imagex -= frame_width;
+            if (imagey < 0) imagey += frame_height;
+            if (imagey >= frame_width) imagey -= frame_height;
 
             value += frame[imagex + imagey * frame_width] * kernel[conv_x + conv_y * kernel_size];
         }
@@ -29,7 +29,7 @@ __device__ float convolution(int centerx, int centery, float* frame, int frame_w
     return value;
 }
 
-__global__ void cudaLenia(float *frames, float* lastFrame, int frameWidth, int frameHeight, int frameIndex, float* kernel, int kernalRadius, float growthCenter, float growthWidth, float deltaTime, int blockx, int blocky, bool saveFrame) {
+__global__ void cudaLenia(float *frames, float* lastFrame, int frameWidth, int frameHeight, int frameIndex, float* kernel, int kernalRadius, int growth_type, float growthCenter, float growthWidth, float deltaTime, int blockx, int blocky, bool saveFrame) {
     for (int imagex = blockIdx.x * blockDim.x + threadIdx.x; imagex < frameWidth; imagex += blockDim.x * blockx) {
         for (int imagey = blockIdx.y * blockDim.y + threadIdx.y; imagey < frameHeight; imagey += blockDim.y * blocky) {
             if (imagex >= frameWidth || imagey >= frameHeight)
@@ -37,7 +37,7 @@ __global__ void cudaLenia(float *frames, float* lastFrame, int frameWidth, int f
 
             float value = lastFrame[imagex + imagey * frameWidth];
             float convolutionValue = convolution(imagex, imagey, &frames[frameWidth * frameHeight * (frameIndex - 1)], frameWidth, frameHeight, kernel, kernalRadius);
-            float growthValue = growth_function(convolutionValue, growthCenter, growthWidth);
+            float growthValue = growth_function(convolutionValue, growthCenter, growthWidth, growth_type);
             float newValue = value + growthValue * deltaTime;
             newValue = fmaxf(0, fminf(newValue, 1));
             lastFrame[imagex + imagey * frameWidth] = newValue;
@@ -71,7 +71,7 @@ LeniaResult leniaRunCuda(LeniaData data, std::vector<float> input, KernelData ke
                 data.FrameWidth, data.FrameHeight, 
                 frameIndex, 
                 kernal_cu, kernel.Radius, 
-                data.GrowthCenter, data.GrowthWidth, data.DeltaTime,
+                data.GrowthType, data.GrowthCenter, data.GrowthWidth, data.DeltaTime,
                 data.Blocks_x, data.Blocks_y,
                 i == data.IterationPerFrame - 1
             );

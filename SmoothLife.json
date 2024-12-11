@@ -3,20 +3,20 @@
     "frameHeight": 512,
     "frameAmount": 1000,
     "iteration_per_frame": 10,
-    "deltaTime": 0.001,
-    "kernel_type": 0,
-    "kernel_radius": 18,
+    "deltaTime": 0.01,
+    "kernel_type": 1,
+    "kernel_radius": 13,
     "kernel_alpha": 4,
     "kernel_peak_heights": [
         1.0
     ],
-    "growth_mhu": 0.14,
-    "growth_sigma": 0.015,
+    "growth_mhu": 0.31,
+    "growth_sigma": 0.049,
     "growth_type": 0,
     "blocks_x": 16,
     "blocks_y": 16,
     "threads_x": 32,
     "threads_y": 32,
-    "seed": 0,
+    "seed": 205,
     "rand_threshold": 0.2
 }

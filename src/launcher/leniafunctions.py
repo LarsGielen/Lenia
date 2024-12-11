@@ -1,6 +1,6 @@
 import numpy as np
 
-def create_kernel_2d(radius, peak_heights, alpha):
+def create_kernel_2d(radius, peak_heights, alpha, kernel_type):
     size = radius * 2 + 1
     kernel = np.zeros((size, size))
     total_sum = 0.0
@@ -11,7 +11,7 @@ def create_kernel_2d(radius, peak_heights, alpha):
             kernel_y = y - radius
             radial_distance = np.sqrt(kernel_x**2 + kernel_y**2)
             radial_distance_percentage = radial_distance / radius
-            value = kernel_function(radial_distance_percentage, peak_heights, alpha)
+            value = kernel_function(radial_distance_percentage, peak_heights, alpha, kernel_type)
 
             kernel[x, y] = value
             total_sum += value
@@ -19,17 +19,23 @@ def create_kernel_2d(radius, peak_heights, alpha):
     kernel /= total_sum
     return kernel
 
-def kernel_function(value, peak_heights, alpha,):
+def kernel_function(value, peak_heights, alpha, kernel_type):
     sum = 0.0
     peak_amount = len(peak_heights)
 
     for i in range(peak_amount):
-        if ((i / peak_amount) <= value and value <= (i + 1) / peak_amount): sum += peak_heights[i] * np.abs(gaussian_bump(peak_amount * value - i, alpha))
+        if ((i / peak_amount) <= value and value <= (i + 1) / peak_amount): 
+            if kernel_type == "Gaussian": sum += peak_heights[i] * np.abs(gaussian_bump(peak_amount * value - i, alpha))
+            if kernel_type == "Step": sum = peak_heights[i] * np.clip( step(peak_amount * value - i, 0.5, 1/4), 0, 1)
 
     return sum
 
-def growth_function(value, growth_center, growth_width): 
-    return gaussian(value, growth_center, growth_width)
+def growth_function(value, growth_center, growth_width, growth_type): 
+    if growth_type == "Gaussian": return gaussian(value, growth_center, growth_width)
+    if growth_type == "Step": return step(value, growth_center, growth_width)
+
+def step(value, mhu, sigma):
+    return np.where(np.abs(value - mhu) <= sigma, 1, -1)
 
 def gaussian(value, mhu, sigma):
     if sigma == 0: sigma = 1e-6

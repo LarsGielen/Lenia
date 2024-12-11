@@ -79,6 +79,16 @@ class View:
         self.threads_y_entry = ttk.Entry(self.settings_frame)
         self.threads_y_entry.grid(row=13, column=1, sticky='we')
         self.threads_y_entry.insert(0, "32")
+
+        ttk.Label(self.settings_frame, text="seed", width=11).grid(row=14, column=0, padx=(0, 10), sticky="w")
+        self.seed_entry = ttk.Entry(self.settings_frame)
+        self.seed_entry.grid(row=14, column=1, sticky='we')
+        self.seed_entry.insert(0, "0")
+
+        ttk.Label(self.settings_frame, text="rand threshold", width=11).grid(row=15, column=0, padx=(0, 10), sticky="w")
+        self.rand_threshold_entry = ttk.Entry(self.settings_frame)
+        self.rand_threshold_entry.grid(row=15, column=1, sticky='we')
+        self.rand_threshold_entry.insert(0, "0.1")
         
         # Create Export
         self.export_frame = ttk.Frame(self.main_frame)
@@ -130,14 +140,14 @@ class View:
             self.video_player.grid(row=0, column=0, padx=5, pady=5)
             self.video_player.start_video("output/video.mp4")
 
-    def update_kernel_plot(self, radius, peak_heights, alpha):
-        self.kernel_plot.update_plot(create_kernel_2d(radius, peak_heights, alpha))
+    def update_kernel_plot(self, radius, peak_heights, alpha, kernel_type):
+        self.kernel_plot.update_plot(create_kernel_2d(radius, peak_heights, alpha, kernel_type))
 
         x = np.linspace(-1, 1, 200)
-        y = np.array([kernel_function(np.abs(value), peak_heights, alpha) for value in np.linspace(-1, 1, 200)])
+        y = np.array([kernel_function(np.abs(value), peak_heights, alpha, kernel_type) for value in np.linspace(-1, 1, 200)])
         y = y / np.max(y)
         self.kernel_slice.update_plot(x, y)
 
-    def update_growth_plot(self, mhu, sigma):
+    def update_growth_plot(self, mhu, sigma, growth_type):
         x = np.linspace(0, 1, 200)
-        self.growth_plot.update_plot(x, growth_function(x, mhu, sigma))
+        self.growth_plot.update_plot(x, growth_function(x, mhu, sigma, growth_type))

@@ -5,13 +5,17 @@ class KernelSliderFrame(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         
-        ttk.Label(self, text="radius").grid(row=0, column=0, sticky="w")
-        self.radius_slider = SliderEntryWidget(self, initial_value=18, minmax=(1, 100), clamp_int=True)
-        self.radius_slider.grid(row=0, column=1, sticky='w')
+        self.kernel_type = ttk.Combobox(self, values=["Gaussian", "Step"], state="readonly")
+        self.kernel_type.set("Gaussian") 
+        self.kernel_type.grid(row=0, column=0, columnspan=2, sticky='we')
 
-        ttk.Label(self, text="alpha").grid(row=1, column=0, sticky="w")
+        ttk.Label(self, text="radius").grid(row=1, column=0, sticky="w")
+        self.radius_slider = SliderEntryWidget(self, initial_value=18, minmax=(1, 100), clamp_int=True)
+        self.radius_slider.grid(row=1, column=1, sticky='w')
+
+        ttk.Label(self, text="alpha").grid(row=2, column=0, sticky="w")
         self.alpha_slider = SliderEntryWidget(self, initial_value=4, minmax=(1, 10), clamp_int=False)
-        self.alpha_slider.grid(row=1, column=1, sticky='w')
+        self.alpha_slider.grid(row=2, column=1, sticky='w')
 
         self.peak_heights = StringVar(value="1")
         ttk.Label(self, text="peak heights").grid(row=3, column=0, sticky='w')
@@ -27,10 +31,11 @@ class KernelSliderFrame(ttk.Frame):
     def get_values(self):
         peak_heights = [float(x.strip()) for x in self.peak_heights.get().split(',')]
 
-        return self.radius_slider.get_value(), peak_heights, self.alpha_slider.get_value() 
+        return self.radius_slider.get_value(), peak_heights, self.alpha_slider.get_value(), self.kernel_type.get()
 
-    def set_values(self, radius, alpha, peak_heights):
+    def set_values(self, radius, alpha, peak_heights, kernel_type):
         self.radius_slider.set_value(radius)
         self.alpha_slider.set_value(alpha)
+        self.kernel_type.set(kernel_type)
 
         self.peak_heights.set(str(peak_heights).replace('[', '').replace(']', ''))
